@@ -1,0 +1,4 @@
+# Don't check in the Output dir
+Output/
+tests/out/.gitkeep
+tests/out/testResults.xml
