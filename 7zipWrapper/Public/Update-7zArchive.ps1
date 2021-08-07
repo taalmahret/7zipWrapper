@@ -74,7 +74,7 @@ function Update-7zArchive() {
 
     )
 
-    if ($PSCmdlet.ShouldProcess($ArchivePath, "Update Archive")) {
+    if ($PSCmdlet.ShouldProcess("Update Archive")) {
 
         [hashtable]$params = @{
             Operation = 'Update'

@@ -63,7 +63,7 @@ function New-7zArchive() {
 
     )
 
-    if ($PSCmdlet.ShouldProcess($ArchivePath, "Create Archive")) {
+    if ($PSCmdlet.ShouldProcess("Create Archive")) {
 
         if (Test-Path -Path $ArchivePath) {
             if (-Not $Force.IsPresent ) {

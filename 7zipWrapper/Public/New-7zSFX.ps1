@@ -88,7 +88,7 @@ Function New-7zSfx {
     }
 
     Process {
-        if ($PSCmdlet.ShouldProcess(( 'Are you sure you want to create new archive executable {0}?' -f $exefile ))) {
+        if ($PSCmdlet.ShouldProcess('Create Executable Archive')) {
 
             $null = New-7zArchive -ArchivePath $tmpfile -FilesToInclude $Include -FilesToExclude @() -ArchiveType 7z -Recurse:$Recurse -Switches $Switches
 
