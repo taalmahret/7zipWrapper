@@ -1,0 +1,33 @@
+# This is a basic publishing workflow.  Needs to pull from the output directory eventually.
+
+name: Publish PowerShell Module
+
+# Controls when the workflow will run
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+  release:
+    types: [created]
+
+jobs:
+  # This workflow contains a single job called "publish-to-gallery"
+  publish-to-gallery:
+    # The type of runner that the job will run on
+    runs-on: windows-latest
+    
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      - name: Build and publish
+        env:
+          NUGET_KEY: ${{ secrets.NUGET_KEY }}
+        shell: pwsh
+        run: |
+          ./build.ps1 -Path /tmp/samplemodule
+          Publish-Module -Path /tmp/samplemodule -NuGetApiKey $env:NUGET_KEY -Verbose
+      - name: Finished publishing module to PSGallery
+        run: |
+          echo This task has completed.
+          echo Reminder, please check that the PSGallery is up-to-Date.
