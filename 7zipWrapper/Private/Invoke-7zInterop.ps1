@@ -130,7 +130,7 @@ function Invoke-7zInterop {
     $pinfo.UseShellExecute = $false
     $pinfo.RedirectStandardOutput = $true
     $pinfo.RedirectStandardError = $true
-    $pinfo.FileName = Get-7zEXE
+    $pinfo.FileName = $7zSettings.Path7zEXE
     $pinfo.Arguments = $Arguments
     $process = New-Object System.Diagnostics.Process
     $process.StartInfo = $pinfo

@@ -36,43 +36,45 @@ function Update-7zArchive() {
         https://documentation.help/7-Zip/update.htm
     #>
 
-    [CmdletBinding()]
-        Param(
-            # The path of the archive to update
-            [Parameter(Mandatory, Position=0)]
-            [string]
-            $ArchivePath,
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='Low')]
+    Param(
+        # The path of the archive to update
+        [Parameter(Mandatory, Position=0)]
+        [string]
+        $ArchivePath,
 
-            # A list of file names or patterns to include
-            [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=1)]
-            [string[]]
-            $FilesToInclude,
+        # A list of file names or patterns to include
+        [Parameter(Mandatory=$true, Position=1)]
+        [string[]]
+        $FilesToInclude,
 
-            # A list of file names or patterns to exclude
-            [Parameter(Mandatory=$false)]
-            [AllowEmptyCollection()]
-            [string[]]
-            $FilesToExclude,
+        # A list of file names or patterns to exclude
+        [Parameter(Mandatory=$false)]
+        [AllowEmptyCollection()]
+        [string[]]
+        $FilesToExclude,
 
-            # The type of archive to update
-            [ValidateSet('7z','zip','gzip','bzip2','tar','iso','udf')]
-            [string]
-            $ArchiveType = '7z',
+        # The type of archive to update
+        [ValidateSet('7z','zip','gzip','bzip2','tar','iso','udf')]
+        [string]
+        $ArchiveType = '7z',
 
-            #If specified apply password to open and update this archive
-            [SecureString]
-            $Password,
+        #If specified apply password to open and update this archive
+        [SecureString]
+        $Password,
 
-            # Additional switches for 7zip (Feature intended for advanced usage)
-            [string]$Switches,
+        # Additional switches for 7zip (Feature intended for advanced usage)
+        [string]$Switches,
 
-            # Apply include patterns recursively
-            [switch]$Recurse,
+        # Apply include patterns recursively
+        [switch]$Recurse,
 
-            [switch]
-            $Force
+        [switch]
+        $Force
 
-        )
+    )
+
+    if ($PSCmdlet.ShouldProcess($ArchivePath, "Update Archive")) {
 
         [hashtable]$params = @{
             Operation = 'Update'
@@ -100,3 +102,4 @@ function Update-7zArchive() {
         return $result
 
     }
+}

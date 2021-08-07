@@ -22,10 +22,20 @@ Official 7Zip: http://www.7-zip.org
 .LINK
 https://documentation.help/7-Zip/start.htm
 #>
-# Dot source public/private functions
+
+#Grab the initialization script and then dot source first
+$private = @(Get-ChildItem -Path (Join-Path -Path $PSScriptRoot -ChildPath 'Private/Initialize-Module.ps1') -ErrorAction Stop)
+try {
+    . $private.FullName
+} catch {
+    throw "Unable to dot source [$($private.FullName)]"
+}
+
+# Dot source classes and public/private functions
 $classes = @(Get-ChildItem -Path (Join-Path -Path $PSScriptRoot -ChildPath 'Classes/*.ps1') -Recurse -ErrorAction Stop)
 $public  = @(Get-ChildItem -Path (Join-Path -Path $PSScriptRoot -ChildPath 'Public/*.ps1')  -Recurse -ErrorAction Stop)
-$private = @(Get-ChildItem -Path (Join-Path -Path $PSScriptRoot -ChildPath 'Private/*.ps1') -Recurse -ErrorAction Stop)
+#Grab everything but the initialization script as its already dot sourced
+$private = @(Get-ChildItem -Path (Join-Path -Path $PSScriptRoot -ChildPath 'Private/*.ps1') -Exclude 'Private/Initialize-Module.ps1' -Recurse -ErrorAction Stop)
 foreach ($import in @($classes + $private + $public)) {
     try {
         . $import.FullName

@@ -24,7 +24,8 @@ function New-7zArchive() {
 
         All files in the folder tmp are excluded, i.e. not included in the archive.
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='Low')]
+    [OutputType([string[]])]
     Param(
         # The path of the archive to create
         [Parameter(Mandatory, Position=0)]
@@ -32,7 +33,7 @@ function New-7zArchive() {
         $ArchivePath,
 
         # A list of file names or patterns to include
-        [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=1)]
+        [Parameter(Mandatory=$true, Position=1)]
         [string[]]
         $FilesToInclude,
 
@@ -62,60 +63,62 @@ function New-7zArchive() {
 
     )
 
-    if (Test-Path -Path $ArchivePath) {
-        if (-Not $Force.IsPresent ) {
-            $Message = ('{0} archive `"{1}`" failed: File already exists!{2}Use -Force to overwrite archive.' -f $verb, $ArchivePath, "`r`n")
+    if ($PSCmdlet.ShouldProcess($ArchivePath, "Create Archive")) {
 
-            Debug-ThrowException `
-            -Message $Message `
-            -Verb 'New' `
-            -Path $ArchivePath `
-            -Output $Message `
-            -LineNumber (Get-CurrentLineNumber) `
-            -Filename (Get-CurrentFileName) `
-            -Executable $7zSettings.Path7zEXE
+        if (Test-Path -Path $ArchivePath) {
+            if (-Not $Force.IsPresent ) {
+                $Message = ('{0} archive `"{1}`" failed: File already exists!{2}Use -Force to overwrite archive.' -f $verb, $ArchivePath, "`r`n")
 
-        }
-        Write-Debug -Message ('Deleting file: {0}' -f $ArchivePath )
-        try {
-            Remove-Item -Path $ArchivePath -Force -ErrorAction Stop
-        }
-        catch {
-
-            Debug-ThrowException `
-                -Message $_.Exception.Message `
+                Debug-ThrowException `
+                -Message $Message `
                 -Verb 'New' `
                 -Path $ArchivePath `
-                -Output $_.Exception.Message `
-                -LineNumber Get-CurrentLineNumber `
-                -Filename Get-CurrentFileName `
-                -Executable $7zSettings.Path7zEXE `
-                -Exception $_.Exception
+                -Output $Message `
+                -LineNumber (Get-CurrentLineNumber) `
+                -Filename (Get-CurrentFileName) `
+                -Executable $7zSettings.Path7zEXE
+
+            }
+            Write-Debug -Message ('Deleting file: {0}' -f $ArchivePath )
+            try {
+                Remove-Item -Path $ArchivePath -Force -ErrorAction Stop
+            }
+            catch {
+
+                Debug-ThrowException `
+                    -Message $_.Exception.Message `
+                    -Verb 'New' `
+                    -Path $ArchivePath `
+                    -Output $_.Exception.Message `
+                    -LineNumber Get-CurrentLineNumber `
+                    -Filename Get-CurrentFileName `
+                    -Executable $7zSettings.Path7zEXE `
+                    -Exception $_.Exception
+            }
         }
-    }
 
-    [hashtable]$params = @{
-        Operation = 'New'
-        ArchiveType = $ArchiveType
-        ArchivePath = $ArchivePath
-        Include = $FilesToInclude
-        Exclude = $FilesToExclude
-        Switches = $Switches
-    }
-    if ( $PSBoundParameters.ContainsKey('Password') ) { # Password parameter present
-        $params.Add('Password',$Password)
-    }
-    if ( $PSBoundParameters.ContainsKey('Force') ) { # Force parameter present
-        $params.Add('Force',$true)
-    }
-    if ( $PSBoundParameters.ContainsKey('Recurse') ) { # Recurse parameter present
-        $params.Add('Recurse',$true)
-    }
-    $params.GetEnumerator() | ForEach-Object { Write-Debug -Message ('{0}: {1}' -f ($_.Key), ($_.Value) ) }
+        [hashtable]$params = @{
+            Operation = 'New'
+            ArchiveType = $ArchiveType
+            ArchivePath = $ArchivePath
+            Include = $FilesToInclude
+            Exclude = $FilesToExclude
+            Switches = $Switches
+        }
+        if ( $PSBoundParameters.ContainsKey('Password') ) { # Password parameter present
+            $params.Add('Password',$Password)
+        }
+        if ( $PSBoundParameters.ContainsKey('Force') ) { # Force parameter present
+            $params.Add('Force',$true)
+        }
+        if ( $PSBoundParameters.ContainsKey('Recurse') ) { # Recurse parameter present
+            $params.Add('Recurse',$true)
+        }
+        $params.GetEnumerator() | ForEach-Object { Write-Debug -Message ('{0}: {1}' -f ($_.Key), ($_.Value) ) }
 
-    [string[]]$result = Invoke-7zInterop @params
+        [string[]]$result = Invoke-7zInterop @params
 
-    return $result
+        return $result
 
+    }
 }
-

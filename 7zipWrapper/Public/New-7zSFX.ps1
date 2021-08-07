@@ -10,32 +10,23 @@ Function New-7zSfx {
         Simply create a self-extracting exe from an executable file app.exe
         with its configuration file app.exe.config:
     .NOTES
-        This function has not been updated yet.  This might be omitted in
-        later revisions as this sets off my sense of DSC flow and its old
-        in its concept.  Since WinRM and DSC self expanding objects are a
-        non starter.  I have excluded this from being exported for now.
+        This might be omitted in later revisions as this sets off my
+        sense of DSC flow and its old in its concept.  Since WinRM and
+        DSC self expanding objects are a non starter.  I have included
+        this for now but im reviewing security articles to determine
+        use in different environments.
 
-        Title - title for messages
-        BeginPrompt - Begin Prompt message
-        Progress - Value can be "yes" or "no". Default value is "yes".
-        RunProgram - Command for executing. Default value is "setup.exe". Substring %%T will be replaced with path to temporary folder, where files were extracted
-        Directory - Directory prefix for "RunProgram". Default value is ".\\"
-        ExecuteFile - Name of file for executing
-        ExecuteParameters - Parameters for "ExecuteFile"
-        ExtractTitle - title of extraction dialog
-        ExtractDialogText - text in dialog
-        ExtractCancelText - button text of cancel button
     .LINK
         https://documentation.help/7-Zip/sfx.htm
 #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact='Low')]
     Param(
         # The name of the exe-file to produce, without extension
         [Parameter(Mandatory=$true, Position=0)]
         [string]$Path,
 
         # The files to include in the archive
-        [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=1)]
+        [Parameter(Mandatory=$true, Position=1)]
         [string[]]$Include,
 
         # The command to run when the sfx archive is started
@@ -74,71 +65,81 @@ Function New-7zSfx {
     )
 
     Begin {
-        # Get the base name of the specified path in Name
-        if (-not [IO.Path]::IsPathRooted($Path)) {
-            $Path = Join-Path "." $Path
-        }
-        # The join the directory name with the file name exluding the extension
-        [string]$Name = Join-Path ([IO.Path]::GetDirectoryName($Path)) ([IO.Path]::GetFileNameWithoutExtension($Path))
 
-        [string]$tmpfile = "$Name.sfx.tmp"
-        [string]$exefile = "$Name.exe"
-
-        if (Test-Path -PathType Leaf "$exefile") {
-            Remove-Item "$exefile" -Force
-        }
-
-        $filesToInclude = @()
-    }
-
-    Process {
-        $filesToInclude += $Include
-    }
-
-    End {
         # Escape a variable for the config file
-        Function Escape([string]$t) {
+        Function Esc([string]$t) {
             # Prefix \ and " with \, replace CRLF with \n and TAB with \t
             Return $t.Replace('\', '\\').Replace('"', '\"').Replace("`r`n", '\n').Replace("`t", '\t')
         }
 
-        $null = New-7zArchive -ArchivePath $tmpfile -FilesToInclude $filesToInclude -FilesToExclude @() -ArchiveType 7z -Recurse:$Recurse -Switches $Switches
+        # Get the base name of the specified path in Name
+        if (-not [IO.Path]::IsPathRooted($Path)) {
+            $Path = Join-Path "." $Path
+        }
+        # Then join the directory name with the file name exluding the extension
+        [string]$Name = Join-Path ([IO.Path]::GetDirectoryName($Path)) ([IO.Path]::GetFileNameWithoutExtension($Path))
 
-        # Copy sfx + archive + config to exe
+        [string]$tmpfile = "$Name.sfx.tmp"
+        [Collections.ArrayList]$cfg = @()
 
-        $CRLF = "`r`n"
-        [string]$cfg = @"
-;!@Install@!UTF-8!
-Title="$Title"
-RunProgram="$(Escape($CommandToRun))"
+        [string]$exefile = "$Name.exe"
+        if (Test-Path -PathType Leaf "$exefile") { Remove-Item "$exefile" -Force }
 
-"@
+    }
 
-        if ($BeginPrompt -ne "") { $cfg += ( 'BeginPrompt="{0}"{1}' -f $(Escape($BeginPrompt)), $CRLF ) }
-        if ($ExtractTitle -ne "") { $cfg += ( 'ExtractTitle="{0}"{1}' -f $(Escape($ExtractTitle)), $CRLF ) }
-        if ($ExtractDialogText -ne "") { $cfg += ( 'ExtractDialogText="{0}"{1}' -f $(Escape($ExtractDialogText)), $CRLF ) }
-        if ($ExtractCancelText -ne "") { $cfg += ( 'ExtractCancelText="{0}"{1}' -f $(Escape($ExtractCancelText)), $CRLF ) }
+    Process {
+        if ($PSCmdlet.ShouldProcess(( 'Are you sure you want to create new archive executable {0}?' -f $exefile ))) {
 
-        if ($null -ne $ConfigOptions) {
-            $ConfigOptions | ForEach-Object {
-                [string[]]$parts = $_.Split('=')
-                if ($parts.Count -lt 2) {
-                    throw "Invalid configuration option '$($_)': missing '='"
-                } else {
-                    $cfg += ( '{0}="{1}"{2}' -f $($parts[0]), $(Escape($parts[1])), $CRLF )
+            $null = New-7zArchive -ArchivePath $tmpfile -FilesToInclude $Include -FilesToExclude @() -ArchiveType 7z -Recurse:$Recurse -Switches $Switches
+
+            # Copy sfx + archive + config to exe via bytestream
+
+            #SFX Configuration File Header
+            [void]$cfg.Add(";!@Install@!UTF-8!")
+            #Title - title for messages
+            [void]$cfg.Add('Title="{0}"' -f $Title)
+            #RunProgram - Command for executing. Default value is "setup.exe". Substring %%T will be replaced with path to temporary folder, where files were extracted
+            [void]$cfg.Add('RunProgram="{0}"' -f $(Esc($CommandToRun)))
+            #BeginPrompt - Begin Prompt message
+            if ($BeginPrompt -ne "")       { [void]$cfg.Add('BeginPrompt="{0}"' -f $(Esc($BeginPrompt))) }
+            #ExtractTitle - title of extraction dialog
+            if ($ExtractTitle -ne "")      { [void]$cfg.Add('ExtractTitle="{0}"' -f $(Esc($ExtractTitle))) }
+            #ExtractDialogText - text in dialog
+            if ($ExtractDialogText -ne "") { [void]$cfg.Add('ExtractDialogText="{0}"' -f $(Esc($ExtractDialogText))) }
+            #ExtractCancelText - button text of cancel button
+            if ($ExtractCancelText -ne "") { [void]$cfg.Add('ExtractCancelText="{0}"' -f $(Esc($ExtractCancelText))) }
+
+            #Progress - Value can be "yes" or "no". Default value is "yes".
+            #Directory - Directory prefix for "RunProgram". Default value is ".\\"
+            #ExecuteFile - Name of file for executing
+            #ExecuteParameters - Parameters for "ExecuteFile"
+            if ($null -ne $ConfigOptions) {
+                $ConfigOptions | ForEach-Object {
+                    [string[]]$parts = $_.Split('=')
+                    if ($parts.Count -lt 2) {
+                        throw "Invalid configuration option '$($_)': missing '='"
+                    } else {
+                        [void]$cfg.Add('{0}="{1}"' -f $($parts[0]), $(Esc($parts[1])))
+                    }
                 }
             }
+
+            #SFX Configuration File Ending Suffix
+            [void]$cfg.Add(';!@InstallEnd@!')
+
+
+            Write-Verbose ('Creating sfx "{0}"...' -f $exefile)
+            Write-Debug ($cfg | Join-String -Separator '`r`n')
+
+            [string]$cfgfile = ( '{0}.sfx.cfg' -f $Name )
+
+            Set-Content "$cfgfile" -Value $cfg
+            Get-Content "$($7zSettings.Path7zSfx)","$cfgfile","$tmpfile" -AsByteStream -Raw | Set-Content "$exefile" -AsByteStream
+
         }
+    }
 
-        $cfg += ';!@InstallEnd@!{0}' -f $CRLF
-
-        Write-Verbose ('Creating sfx "{0}"...' -f $exefile)
-        Write-Debug $cfg
-
-        [string]$cfgfile = ( '{0}.sfx.cfg' -f $Name )
-
-        Set-Content "$cfgfile" -Value $cfg
-        Get-Content "$7Z_SFX","$cfgfile","$tmpfile" -Encoding Byte -Raw | Set-Content "$exefile" -Encoding Byte
+    End {
 
         Remove-Item "$tmpfile"
         Remove-Item "$cfgfile"

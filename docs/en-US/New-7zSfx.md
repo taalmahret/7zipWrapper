@@ -15,7 +15,7 @@ Create a new 7-Zip self extracting archive
 ```
 New-7zSfx [-Path] <String> [-Include] <String[]> [-CommandToRun] <String> [-Title <String>]
  [-BeginPrompt <String>] [-ExtractTitle <String>] [-ExtractDialogText <String>] [-ExtractCancelText <String>]
- [-ConfigOptions <String[]>] [-Recurse] [-Switches <String>] [<CommonParameters>]
+ [-ConfigOptions <String[]>] [-Recurse] [-Switches <String>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -59,7 +59,7 @@ Aliases:
 Required: True
 Position: 2
 Default value: None
-Accept pipeline input: True (ByValue)
+Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
@@ -190,6 +190,36 @@ Additional switches to pass to 7za when creating the archive
 Type: String
 Parameter Sets: (All)
 Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -WhatIf
+Shows what would happen if the cmdlet runs. The cmdlet is not run.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: wi
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Confirm
+Prompts you for confirmation before running the cmdlet.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: cf
 
 Required: False
 Position: Named

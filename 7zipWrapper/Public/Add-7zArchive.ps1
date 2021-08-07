@@ -32,7 +32,7 @@ function Add-7zArchive() {
         $ArchivePath,
 
         # A list of file names or patterns to include
-        [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=1)]
+        [Parameter(Mandatory=$true, Position=1)]
         [string[]]
         $FilesToInclude,
 

@@ -25,7 +25,7 @@ function Debug-ThrowException {
         $7zException.ScriptLineNumber   = $LineNumber
         $7zException.ScriptFilename     = $Filename
         $7zException.SevenZipExecutable = $Executable
-
+        $7zException.Exception          = $Exception
 
     }
 

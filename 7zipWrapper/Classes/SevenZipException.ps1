@@ -61,6 +61,7 @@ class SevenZipException : Exception {
         [string]$ScriptLineNumber
         [string]$ScriptFilename
         [string]$SevenZipExecutable
+        [Exception]$Exception
 
         SevenZipException($Message) : base($Message) {
 
