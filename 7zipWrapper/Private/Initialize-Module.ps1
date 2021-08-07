@@ -1,3 +1,15 @@
+<#
+    .SYNOPSIS
+        Performs initial module tasks and configurations
+    .DESCRIPTION
+        This is the landing script for the entry point of this module
+    .EXAMPLE
+        .\Initialize-Module.ps1
+
+        this is automatically called from the build task in the main module folder
+    .NOTES
+        This function has not been updated yet.
+#>
 [CmdletBinding()]
 param (
     [Parameter()]
