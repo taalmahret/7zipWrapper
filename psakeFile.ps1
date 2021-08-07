@@ -5,9 +5,11 @@ properties {
     $PSBPreference.Test.OutputFile = 'out/testResults.xml'
 }
 
-task Default -depends Test
+task Default -depends Build
 
 task Test -FromModule PowerShellBuild -minimumVersion '0.6.1'
+
+task Build -FromModule PowerShellBuild -minimumVersion '0.6.1'
 
 task Import {
     Import-Module ('{0}\{1}.psd1' -f $ENV:BHBuildOutput, $ENV:BHProjectName )
