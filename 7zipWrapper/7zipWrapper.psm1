@@ -28,7 +28,7 @@ $private = @(Get-ChildItem -Path (Join-Path -Path $PSScriptRoot -ChildPath 'Priv
 try {
     . $private.FullName
 } catch {
-    throw "Unable to dot source [$($private.FullName)]"
+    throw "Unable to dot source Initialization script [$($private.FullName)]"
 }
 
 # Dot source classes and public/private functions
