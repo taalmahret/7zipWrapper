@@ -43,8 +43,8 @@ $psakeFile = './psakeFile.ps1'
 if ($PSCmdlet.ParameterSetName -eq 'Help') {
     Get-PSakeScriptTasks -buildFile $psakeFile | Format-Table -Property Name, Description, Alias, DependsOn
 } else {
-    #Set-BuildEnvironment -Force
-    #Invoke-psake $psakeFile -taskList IncrementVersion -nologo
+    Set-BuildEnvironment -Force
+    Invoke-psake $psakeFile -taskList IncrementVersion -nologo
     Set-BuildEnvironment -Force
     Invoke-psake -buildFile $psakeFile -taskList $Task -nologo -properties $Properties -parameters $Parameters
     exit ([int](-not $psake.build_success))
