@@ -59,13 +59,13 @@ Properties {
     # this script.  This is meant to represent a GitHub Repository Secret
     # value that is only available during this script running.
     $NuGetApiKey = $env:NUGET_KEY
-    $EncryptedApiKeyPath = ("{0}\vscode-powershell\NuGetApiKey.clixml" -f (Get-SpecialFolder 'LocalApplicationData').Path )
+    #$EncryptedApiKeyPath = ("{0}\vscode-powershell\NuGetApiKey.clixml" -f (Get-SpecialFolder 'LocalApplicationData').Path )
 
     # Set this to $true to create a module with a monolithic PSM1
     $PSBPreference.Build.CompileModule = $false
     $PSBPreference.Help.DefaultLocale = 'en-US'
     $PSBPreference.Test.OutputFile = 'out/testResults.xml'
-    $PSBPreference.Publish.PSRepositoryApiKey = Get-NuGetApiKey $NuGetApiKey $EncryptedApiKeyPath
+    $PSBPreference.Publish.PSRepositoryApiKey = $NuGetApiKey
 
 }
 
@@ -93,7 +93,7 @@ Task PublishImpl -Depends Test -requiredVariables NuGetApiKey, EncryptedApiKeyPa
 
     $publishParams = @{
         Path        = $env:BHBuildOutput
-        NuGetApiKey = Get-NuGetApiKey $NuGetApiKey $EncryptedApiKeyPath
+        NuGetApiKey = $NuGetApiKey #Get-NuGetApiKey $NuGetApiKey $EncryptedApiKeyPath
     }
 
     if ($Repository) {
