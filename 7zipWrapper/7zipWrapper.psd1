@@ -95,16 +95,16 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        # Tags = @()
+        # Tags = @('powershell', '7zip', '7-zip', 'zip', 'archive', 'extract', 'compress', 'PSEdition_Core', 'PSEdition_Desktop', 'Windows')
 
         # A URL to the license for this module.
-        # LicenseUri = ''
+        # LicenseUri = 'https://raw.githubusercontent.com/taalmahret/7zipWrapper/main/LICENSE'
 
         # A URL to the main website for this project.
         # ProjectUri = 'https://github.com/taalmahret/7zipWrapper'
 
         # A URL to an icon representing this module.
-        # IconUri = ''
+        # IconUri = 'https://raw.githubusercontent.com/taalmahret/7zipWrapper/main/Assets/7zWrapper.ico'
 
         # ReleaseNotes of this module
         ReleaseNotes = '# Release Notes
