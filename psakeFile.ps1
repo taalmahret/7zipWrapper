@@ -53,11 +53,11 @@ Properties {
     # Path to the release notes file.  Set to $null if the release notes reside in the manifest file.
     $ReleaseNotesPath = ('{0}\RELEASENOTES.md' -f $env:BHProjectPath )
 
-    # Your NuGet API key for the PSGallery. The build will store the key
-    # encrypted in a file, so that on subsequent publishes you will no longer
-    # be prompted for the API key. Create an environment key prior to running
-    # this script.  This is meant to represent a GitHub Repository Secret
-    # value that is only available during this script running.
+    # Your NuGet API key for the PSGallery. The build will read the environment
+    # variable $env:NUGET_KEY and then use for the Publish task.  Create this
+    # environment variable prior to running this script.  This is meant to
+    # represent a GitHub Repository Secret but can be populated on your dev
+    # box prior publishing and is only available during this session.
     $NuGetApiKey = $env:NUGET_KEY
     #$EncryptedApiKeyPath = ("{0}\vscode-powershell\NuGetApiKey.clixml" -f (Get-SpecialFolder 'LocalApplicationData').Path )
 
@@ -73,23 +73,19 @@ Task default -Depends Test
 
 task Test -FromModule PowerShellBuild -minimumVersion '0.6.1'
 
+# Task Init {
+#     if (!(Test-Path $env:BHBuildOutput)) {
+#         $null = New-Item $env:BHBuildOutput -ItemType Directory
+#     }
+# }
+
 ###############################################################################
 # Customize these tasks for performing operations before and/or after publish.
 ###############################################################################
 Task PrePublish {
 }
 
-Task PostPublish {
-}
-
-###############################################################################
-# Core task implementations - this possibly "could" ship as part of the
-# vscode-powershell extension and then get dot sourced into this file.
-###############################################################################
-
-Task Publish -Depends Test, PrePublish, PublishImpl, PostPublish -FromModule PowerShellBuild -minimumVersion '0.6.1'
-
-Task PublishImpl -Depends Test -requiredVariables NuGetApiKey, EncryptedApiKeyPath {
+Task RunPublish -requiredVariables NuGetApiKey {
 
     $publishParams = @{
         Path        = $env:BHBuildOutput
@@ -102,6 +98,18 @@ Task PublishImpl -Depends Test -requiredVariables NuGetApiKey, EncryptedApiKeyPa
 
     Publish-Module @publishParams -WhatIf
 }
+
+Task PostPublish {
+    #wipe the nuget key if it has a value
+    $env:NUGET_KEY = $null
+}
+
+###############################################################################
+# Core task implementations - this possibly "could" ship as part of the
+# vscode-powershell extension and then get dot sourced into this file.
+###############################################################################
+
+Task Publish -Depends Test, PrePublish, RunPublish, PostPublish -FromModule PowerShellBuild -minimumVersion '0.6.1'
 
 ###############################################################################
 # Customize these tasks for performing operations before and/or after build.
@@ -117,9 +125,14 @@ Task PreBuild -requiredVariables ReleaseNotesPath {
 
 }
 
+Task PostBuild {
+    #wipe the nuget key if it has a value
+    $env:NUGET_KEY = $null
+}
+
 Task Build -FromModule PowerShellBuild -minimumVersion '0.6.1'
 
-Task BuildAll -Depends Clean, PreBuild, Build
+Task BuildAll -Depends Init, Clean, PreBuild, Build, PostBuild
 
 # Task Clean  {
 #     # Sanity check the dir we are about to "clean".  If $env:BHBuildOutput were to
@@ -130,49 +143,15 @@ Task BuildAll -Depends Clean, PreBuild, Build
 #     }
 # }
 
-# Task Init -Depends IncrementVersion{
-#    if (!(Test-Path $env:BHBuildOutput)) {
-#        $null = New-Item $env:BHBuildOutput -ItemType Directory
-#    }
-# }
-
 task Remove {
-    Get-Module $ENV:BHProjectName | Remove-Module
+    Get-Module $ENV:BHProjectName | Remove-Module -Force
 }
 
 task Import {
     if ($env:BHBuildOutput) {
-        Import-Module ('{0}\{1}.psd1' -f $ENV:BHBuildOutput, $ENV:BHProjectName )
+        Import-Module ('{0}\{1}.psd1' -f $ENV:BHBuildOutput, $ENV:BHProjectName ) -Force
     }
 
-}
-
-task IncrementVersion {
-    $CurrentVersion = Test-ModuleManifest $ENV:BHPSModuleManifest | Select-Object -ExpandProperty Version
-    $Build = $CurrentVersion.Build
-    $Minor = $CurrentVersion.Minor
-    $Major = $CurrentVersion.Major
-    if ($IncrementMajorVersion){$Major++;$Minor=0;$Build=-1}
-    elseif ($IncrementMinorVersion){$Minor++;$Build=-1}
-    $Build++
-    $NewVersion = [System.Version]$("{0}.{1}.{2}" -f $Major,$Minor,$Build)
-    Update-ModuleManifest -Path $ENV:BHPSModuleManifest -ModuleVersion $NewVersion
-
-    #This is not how this is normally done but there are no docs on how to reset the psake environment from inside of psake
-    $env:BHBuildOutput = $env:BHBuildOutput.Replace($CurrentVersion, $NewVersion)
-
-}
-
-Task StoreKey -requiredVariables NuGetApiKey, EncryptedApiKeyPath {
-    if (Test-Path $EncryptedApiKeyPath) { Remove-Item $EncryptedApiKeyPath }
-
-    $null = Get-NuGetApiKey $NuGetApiKey $EncryptedApiKeyPath
-    "The NuGetApiKey has been stored in $EncryptedApiKeyPath"
-}
-
-Task ShowKey -requiredVariables EncryptedApiKeyPath {
-    $Result = Get-NuGetApiKey $null $EncryptedApiKeyPath
-    "The stored NuGetApiKey is: $Result"
 }
 
 # Task ? -description 'Lists the available tasks' {

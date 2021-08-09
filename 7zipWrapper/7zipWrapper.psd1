@@ -12,7 +12,7 @@
 RootModule = '7zipWrapper.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.1.39'
+ModuleVersion = '0.1.47'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -95,16 +95,16 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        # Tags = @('powershell', '7zip', '7-zip', 'zip', 'archive', 'extract', 'compress', 'PSEdition_Core', 'PSEdition_Desktop', 'Windows')
+        # Tags = @()
 
         # A URL to the license for this module.
-        # LicenseUri = 'https://raw.githubusercontent.com/taalmahret/7zipWrapper/main/LICENSE'
+        # LicenseUri = ''
 
         # A URL to the main website for this project.
-        # ProjectUri = 'https://github.com/taalmahret/7zipWrapper'
+        # ProjectUri = ''
 
         # A URL to an icon representing this module.
-        # IconUri = 'https://raw.githubusercontent.com/taalmahret/7zipWrapper/main/Assets/7zWrapper.ico'
+        # IconUri = ''
 
         # ReleaseNotes of this module
         ReleaseNotes = '# Release Notes
