@@ -134,7 +134,7 @@ if ($Properties.count -lt 1) { $Properties = @{'N/A'='N/A'}}
 $Properties.GetEnumerator() | ForEach-Object {$_.Key + ' = ' + $_.Value } | Write-ShellMessage -Message 'Properties'
 if ($Parameters.count -lt 1) { $Parameters = @{'N/A'='N/A'}}
 $Parameters.GetEnumerator() | ForEach-Object {$_.Key + ' = ' + $_.Value } | Write-ShellMessage -Message 'Parameters'
-Write-ShellMessage '' -NewLine
+
 
 
 # Bootstrap dependencies
@@ -145,9 +145,9 @@ if ($Bootstrap.IsPresent) {
         if (-not (Get-Module -Name PSDepend -ListAvailable)) {
             Install-Module -Name PSDepend -Repository PSGallery -Scope CurrentUser -Force
         }
+        Write-ShellMessage -Message 'Initialize Module' -Detail 'PsDepend'
         Import-Module -Name PSDepend -Verbose:$false
         Invoke-PSDepend -Path './requirements.psd1' -Install -Import -Force -WarningAction SilentlyContinue
-        Write-ShellMessage -Message 'Initialize Module' -Detail 'PsDepend'
     } else {
         Write-Warning 'No [requirements.psd1] found. Skipping build dependency installation.'
     }
@@ -181,6 +181,7 @@ if ($IncrementVersion.IsPresent) {
 
 }
 
+Write-ShellMessage '' -NewLine
 
 # Execute psake task(s)
 $psakeFile = './psakeFile.ps1'
